@@ -14,7 +14,7 @@
 
 @interface ViewController ()<AVAudioPlayerDelegate>
 
-@property (weak, nonatomic) IBOutlet UITableView *lrcTable;
+@property (strong, nonatomic) UITableView *lrcTable;
 
 @property (strong,nonatomic) LrcParser* lrcContent;
 
@@ -34,10 +34,14 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    
+    self.lrcTable = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
+    [self.lrcTable registerClass:[UITableViewCell class] forCellReuseIdentifier:@"cell"];
+    self.lrcTable.separatorStyle = UITableViewCellSeparatorStyleNone;
+    self.lrcTable.showsVerticalScrollIndicator = NO;
     self.lrcTable.delegate = self;
     self.lrcTable.dataSource = self;
     self.lrcTable.backgroundColor = [UIColor clearColor];
+    [self.view addSubview:self.lrcTable];
     
     self.lrcContent = [[LrcParser alloc] init];
     [self.lrcContent parseLrc];
@@ -67,10 +71,10 @@
     return self.lrcContent.wordArray.count;
 }
 
--(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
-    UITableViewCell *cell=[self.lrcTable dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
-    cell.textLabel.text=self.lrcContent.wordArray[indexPath.row];
+    UITableViewCell *cell = [self.lrcTable dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    cell.textLabel.text = self.lrcContent.wordArray[indexPath.row];
     cell.textLabel.textColor = (indexPath.row==_currentRow) ? [UIColor redColor] : [UIColor whiteColor];
     cell.textLabel.textAlignment = NSTextAlignmentCenter;
     cell.textLabel.font = [UIFont systemFontOfSize:15];
@@ -96,8 +100,6 @@
     [self.player play];
     
     [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(updateTime) userInfo:nil repeats:YES];
-    
-    
 }
 
 - (void)updateTime
