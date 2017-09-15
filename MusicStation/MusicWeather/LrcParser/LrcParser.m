@@ -18,7 +18,7 @@
 
 - (instancetype) init
 {
-    if (self=[super init]) {
+    if (self = [super init]) {
         self.timerArray = [[NSMutableArray alloc] init];
         self.wordArray = [[NSMutableArray alloc] init];
     }
@@ -31,24 +31,19 @@
     return  [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:nil];
 }
 
-//测试示例
-- (void)parseLrc
-{
-    [self parseLrc:[self getLrcFile:@"冰雨"]];
-}
-
 - (void)parseLrc:(NSString *)lrc
 {
-    NSLog(@"%@",lrc);
-    if(![lrc isEqual:nil]) {
-        NSArray *sepArray = [lrc componentsSeparatedByString:@"["];
+    NSString *lrcContent = [self getLrcFile:lrc];
+    NSLog(@"%@",lrcContent);
+    if(![lrcContent isEqual:nil]) {
+        NSArray *sepArray = [lrcContent componentsSeparatedByString:@"["];
         NSArray *lineArray = [[NSArray alloc] init];
-        for(int i = 0; i < sepArray.count; i++) {
-            if([sepArray[i] length] > 0) {
-                lineArray=[sepArray[i] componentsSeparatedByString:@"]"];
+        for(int index = 0; index < sepArray.count; index++) {
+            if([sepArray[index] length] > 0) {
+                lineArray = [sepArray[index] componentsSeparatedByString:@"]"];
                 if (![lineArray[0] isEqualToString:@"\n"]) {
                     [self.timerArray addObject:lineArray[0]];
-                    [self.wordArray addObject:lineArray.count>1?lineArray[1]:@""];
+                    [self.wordArray addObject:lineArray.count > 1 ? lineArray[1] : @""];
                 }
             }
         }

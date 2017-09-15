@@ -10,6 +10,10 @@
 
 @interface UIImage (WaterMash)
 
-- (UIImage *)addWaterMashWithText:(NSString *)text;
+- (UIImage *)addWaterMaskerWithText:(NSString *)text;
+
+- (UIImage *)generatingAlbumImage;
+
+- (UIImage *)addWaterMaskWithText:(NSString *)text;
 
 @end

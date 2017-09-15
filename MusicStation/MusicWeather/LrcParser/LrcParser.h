@@ -15,9 +15,7 @@
 //歌词
 @property (nonatomic,strong) NSMutableArray *wordArray;
 
-
-//解析歌词
--(void) parseLrc;
 //解析歌词
 -(void) parseLrc:(NSString*)lrc;
+
 @end

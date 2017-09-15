@@ -16,16 +16,13 @@
 
 @property (strong, nonatomic) UITableView *lrcTable;
 
-@property (strong,nonatomic) LrcParser* lrcContent;
-
-@property (nonatomic,strong) NSTimer *timer;
+@property (strong, nonatomic) LrcParser* lrcContent;
 
 @property (assign) NSInteger currentRow;
 
-@property (nonatomic,copy) NSArray *songs;
+@property (strong, nonatomic) UIImage *albumPoster;
 
 @end
-
 
 
 @implementation ViewController
@@ -34,7 +31,7 @@
 {
     [super viewDidLoad];
     // Do any additional setup after loading the view, typically from a nib.
-    self.lrcTable = [[UITableView alloc] initWithFrame:self.view.bounds style:UITableViewStylePlain];
+    self.lrcTable = [[UITableView alloc] initWithFrame:CGRectMake(0, 20, self.view.bounds.size.width, self.view.bounds.size.height - 20) style:UITableViewStylePlain];
     [self.lrcTable registerClass:[UITableViewCell class] forCellReuseIdentifier:@"cell"];
     self.lrcTable.separatorStyle = UITableViewCellSeparatorStyleNone;
     self.lrcTable.showsVerticalScrollIndicator = NO;
@@ -44,7 +41,11 @@
     [self.view addSubview:self.lrcTable];
     
     self.lrcContent = [[LrcParser alloc] init];
-    [self.lrcContent parseLrc];
+//    [self.lrcContent parseLrc:@"冰雨"];
+    [self.lrcContent parseLrc:@"董小姐"];
+    
+    self.albumPoster = [[UIImage imageNamed:@"wall.jpg"] generatingAlbumImage];
+    
     [self.lrcTable reloadData];
     
     [self initPlayer];
@@ -74,6 +75,7 @@
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     UITableViewCell *cell = [self.lrcTable dequeueReusableCellWithIdentifier:@"cell" forIndexPath:indexPath];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
     cell.textLabel.text = self.lrcContent.wordArray[indexPath.row];
     cell.textLabel.textColor = (indexPath.row==_currentRow) ? [UIColor redColor] : [UIColor whiteColor];
     cell.textLabel.textAlignment = NSTextAlignmentCenter;
@@ -90,10 +92,13 @@
 
 - (void)initPlayer
 {
-    self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:[[NSBundle mainBundle] URLForResource:@"冰雨"
+//    self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:[[NSBundle mainBundle] URLForResource:@"冰雨"
+//                                                                                       withExtension:@"mp3"]
+//                                                         error:nil];
+    self.player = [[AVAudioPlayer alloc] initWithContentsOfURL:[[NSBundle mainBundle] URLForResource:@"董小姐"
                                                                                        withExtension:@"mp3"]
                                                          error:nil];
-    self.player.numberOfLoops = -1;
+    self.player.numberOfLoops = MAXFLOAT;
     self.player.currentTime = 0;
     self.player.volume = 1.0;
     [self.player prepareToPlay];
@@ -104,13 +109,13 @@
 
 - (void)updateTime
 {
-    CGFloat currentTime=self.player.currentTime;
+    CGFloat currentTime = self.player.currentTime;
 //    NSLog(@"%d:%d",(int)currentTime / 60, (int)currentTime % 60);
-    for (int i=0; i<self.lrcContent.timerArray.count; i++) {
-        NSArray *timeArray = [self.lrcContent.timerArray[i] componentsSeparatedByString:@":"];
+    for (int index = 0; index < self.lrcContent.timerArray.count; index++) {
+        NSArray *timeArray = [self.lrcContent.timerArray[index] componentsSeparatedByString:@":"];
         float lrcTime = [timeArray[0] intValue] * 60 + [timeArray[1] floatValue];
         if (currentTime > lrcTime) {
-            _currentRow = i;
+            _currentRow = index;
         } else {
             break;
         }
@@ -120,8 +125,10 @@
     [self.lrcTable scrollToRowAtIndexPath:[NSIndexPath indexPathForRow:_currentRow inSection:0] atScrollPosition:UITableViewScrollPositionMiddle animated:YES];
     
     NSMutableDictionary *info = [[NSMutableDictionary alloc] init];
-    [info setObject:@"冰雨" forKey:MPMediaItemPropertyTitle];
-    [info setObject:@"刘德华" forKey:MPMediaItemPropertyArtist];
+//    [info setObject:@"冰雨" forKey:MPMediaItemPropertyTitle];
+//    [info setObject:@"刘德华" forKey:MPMediaItemPropertyArtist];
+    [info setObject:@"董小姐" forKey:MPMediaItemPropertyTitle];
+    [info setObject:@"宋冬野" forKey:MPMediaItemPropertyArtist];
     [info setObject:[self getCurrentArtwork] forKey:MPMediaItemPropertyArtwork];
     //音乐剩余时长
     [info setObject:[NSNumber numberWithDouble:self.player.duration] forKey:MPMediaItemPropertyPlaybackDuration];
@@ -135,10 +142,12 @@
 
 - (MPMediaItemArtwork *)getCurrentArtwork
 {
-    UIImage *cover = [UIImage imageNamed:@"wall.jpg"];
+    UIImage *cover = self.albumPoster;
     NSString *lrc = [self.lrcContent.wordArray objectAtIndex:_currentRow];
-    NSLog(@"current lrc : %@", lrc);
-    cover = [cover addWaterMashWithText:lrc];
+    NSString *lrcTime = [self.lrcContent.timerArray objectAtIndex:_currentRow];
+    NSLog(@"current lrc : (%@)%@", lrcTime,lrc);
+//    cover = [cover addWaterMashWithText:lrc];
+    cover = [cover addWaterMaskWithText:lrc];
     
     // update cover view
 //    coverView.image = cover;
@@ -155,7 +164,8 @@
     CIImage *ciImage = [CIImage imageWithCGImage:image.CGImage];
     CIFilter *filter = [CIFilter filterWithName:@"CIGaussianBlur"];
     [filter setValue:ciImage forKey:kCIInputImageKey];
-    [filter setValue:@0.0f forKey:@"inputRadius"];
+    [filter setValue:@0.1f forKey:@"inputRadius"];
+    
     CIImage *result = [filter valueForKey:kCIOutputImageKey];
     CGImageRef ref = [context createCGImage:result fromRect:[result extent]];
     return [UIImage imageWithCGImage:ref];
